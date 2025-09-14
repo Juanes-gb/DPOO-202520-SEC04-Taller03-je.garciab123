@@ -163,7 +163,16 @@ public class Aerolinea
      */
     public Vuelo getVuelo( String codigoRuta, String fechaVuelo )
     {
-        // TODO implementar
+        if (codigoRuta == null || fechaVuelo == null) return null;
+
+        for (Vuelo v : vuelos)
+        {
+            Ruta r = v.getRuta();
+            if (r != null && codigoRuta.equals(r.getCodigoRuta()) && fechaVuelo.equals(v.getFecha()))
+            {
+                return v;
+            }
+        }
         return null;
     }
 
@@ -182,9 +191,13 @@ public class Aerolinea
      */
     public Collection<Tiquete> getTiquetes( )
     {
-        // TODO implementar
-        return null;
-
+        List<Tiquete> todos = new ArrayList<>();
+        for (Vuelo v : vuelos)
+        {
+            Collection<Tiquete> tv = v.getTiquetes();
+            if (tv != null) todos.addAll(tv);
+        }
+        return todos;
     }
 
     // ************************************************************************************
@@ -203,7 +216,13 @@ public class Aerolinea
      */
     public void cargarAerolinea( String archivo, String tipoArchivo ) throws TipoInvalidoException, IOException, InformacionInconsistenteException
     {
-        // TODO implementar
+        IPersistenciaAerolinea p = CentralPersistencia.getPersistenciaAerolinea(tipoArchivo);
+        
+        aviones.clear();
+        rutas.clear();
+        vuelos.clear();
+        clientes.clear();
+        p.cargarAerolinea(archivo, this);
     }
 
     /**
@@ -215,7 +234,8 @@ public class Aerolinea
      */
     public void salvarAerolinea( String archivo, String tipoArchivo ) throws TipoInvalidoException, IOException
     {
-        // TODO implementar
+        IPersistenciaAerolinea p = CentralPersistencia.getPersistenciaAerolinea(tipoArchivo);
+        p.salvarAerolinea(archivo, this);
     }
 
     /**
