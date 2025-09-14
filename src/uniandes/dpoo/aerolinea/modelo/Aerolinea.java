@@ -17,6 +17,10 @@ import uniandes.dpoo.aerolinea.persistencia.IPersistenciaAerolinea;
 import uniandes.dpoo.aerolinea.persistencia.IPersistenciaTiquetes;
 import uniandes.dpoo.aerolinea.persistencia.TipoInvalidoException;
 import uniandes.dpoo.aerolinea.tiquetes.Tiquete;
+import uniandes.dpoo.aerolinea.modelo.tarifas.CalculadoraTarifas;
+import uniandes.dpoo.aerolinea.modelo.tarifas.CalculadoraTarifasTemporadaAlta;
+import uniandes.dpoo.aerolinea.modelo.tarifas.CalculadoraTarifasTemporadaBaja;
+import uniandes.dpoo.aerolinea.tiquetes.GeneradorTiquetes;
 
 /**
  * En esta clase se organizan todos los aspectos relacionados con una Aerolínea.
@@ -285,7 +289,19 @@ public class Aerolinea
      */
     public void programarVuelo( String fecha, String codigoRuta, String nombreAvion ) throws Exception
     {
-        // TODO Implementar el método
+    	if (fecha == null || codigoRuta == null || nombreAvion == null) throw new Exception("Datos inválidos");
+    	Ruta ruta = getRuta(codigoRuta);
+    	if (ruta == null) throw new Exception("Ruta no existe");
+    	Avion avion = null;
+    	for (Avion a : aviones) { if (nombreAvion.equals(a.getNombre())) { avion = a; break; } }
+    	if (avion == null) throw new Exception("Avión no existe");
+    	for (Vuelo v : vuelos)
+    	{
+    	    if (v.getAvion() != null && nombreAvion.equals(v.getAvion().getNombre()) && fecha.equals(v.getFecha()))
+    	        throw new Exception("Avión ocupado en esa fecha");
+    	}
+    	Vuelo nuevo = new Vuelo(ruta, fecha, avion);
+    	vuelos.add(nuevo);
     }
 
     /**
@@ -305,8 +321,23 @@ public class Aerolinea
      */
     public int venderTiquetes( String identificadorCliente, String fecha, String codigoRuta, int cantidad ) throws VueloSobrevendidoException, Exception
     {
-        // TODO Implementar el método
-        return -1;
+    	if (cantidad <= 0) throw new Exception("Cantidad inválida");
+
+    	Cliente cliente = getCliente(identificadorCliente);
+    	if (cliente == null) throw new Exception("Cliente no existe");
+
+    	Vuelo vuelo = getVuelo(codigoRuta, fecha);
+    	if (vuelo == null) throw new Exception("Vuelo no existe");
+
+    	int disponibles = vuelo.getAvion().getCapacidad() - vuelo.getTiquetes().size();
+    	if (cantidad > disponibles) throw new VueloSobrevendidoException(vuelo);
+
+    	int mes = obtenerMes(fecha);
+    	boolean esBaja = (mes >= 1 && mes <= 5) || (mes >= 9 && mes <= 11);
+    	CalculadoraTarifas calc = esBaja ? new CalculadoraTarifasTemporadaBaja()
+    	                                 : new CalculadoraTarifasTemporadaAlta();
+
+    	return vuelo.venderTiquetes(cliente, calc, cantidad);
     }
 
     /**
@@ -316,7 +347,8 @@ public class Aerolinea
      */
     public void registrarVueloRealizado( String fecha, String codigoRuta )
     {
-        // TODO Implementar el método
+    	Vuelo v = getVuelo(codigoRuta, fecha);
+    	if (v != null) v.registrarRealizado();
     }
 
     /**
@@ -326,8 +358,21 @@ public class Aerolinea
      */
     public String consultarSaldoPendienteCliente( String identificadorCliente )
     {
-        // TODO Implementar el método
-        return "";
+    	Cliente c = getCliente(identificadorCliente);
+    	if (c == null) return "0";
+    	return String.valueOf(c.calcularValorTotalTiquetes());
+    }
+    
+    private int obtenerMes(String fecha) throws Exception
+    {
+        String[] p = fecha.split("[^0-9]+");
+        if (p.length < 2) throw new Exception("Fecha inválida");
+        int mes;
+        if (p[0].length() == 4) mes = Integer.parseInt(p[1]);
+        else if (p.length >= 3 && p[2].length() == 4) mes = Integer.parseInt(p[1]);
+        else mes = Integer.parseInt(p[1]);
+        if (mes < 1 || mes > 12) throw new Exception("Fecha inválida");
+        return mes;
     }
 
 }

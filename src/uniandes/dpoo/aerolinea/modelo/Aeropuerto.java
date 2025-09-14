@@ -12,9 +12,52 @@ import uniandes.dpoo.aerolinea.exceptions.AeropuertoDuplicadoException;
  */
 public class Aeropuerto
 {
-    // TODO completar
-    
+	private static final Set<String> codigosUsados = new HashSet<>();
+    public static final int RADIO_TERRESTRE = 6371;
 
+    private String nombre;
+    private String codigo;
+    private String ciudad;
+    private double latitud;
+    private double longitud;
+
+    public Aeropuerto(String nombre, String codigo, String ciudad, double latitud, double longitud) throws AeropuertoDuplicadoException
+    {
+        if (codigosUsados.contains(codigo))
+            throw new AeropuertoDuplicadoException("Ya existe un aeropuerto con el código " + codigo);
+        this.nombre = nombre;
+        this.codigo = codigo;
+        this.ciudad = ciudad;
+        this.latitud = latitud;
+        this.longitud = longitud;
+        codigosUsados.add(codigo);
+    }
+
+    public String getNombre()
+    {
+        return nombre;
+    }
+
+    public String getCodigo()
+    {
+        return codigo;
+    }
+
+    public String getCiudad()
+    {
+        return ciudad;
+    }
+
+    public double getLatitud()
+    {
+        return latitud;
+    }
+
+    public double getLongitud()
+    {
+        return longitud;
+    }
+    
     /**
      * Este método calcula la distancia *aproximada* entre dos aeropuertos. Hay fórmulas más precisas pero esta es suficientemente buena para el caso de la aerolínea.
      * 
