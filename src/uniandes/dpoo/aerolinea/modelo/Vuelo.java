@@ -66,8 +66,16 @@ public class Vuelo
         this.realizado = true;
         for (Tiquete t : tiquetes)
         {
-            if (!t.esUsado() && t.getVuelo() == this) t.marcarComoUsado();
+            if (!t.esUsado() && t.getVuelo() == this)
+            {
+                t.marcarComoUsado();
+            }
         }
+    }
+
+    public boolean isRealizado()
+    {
+        return realizado;
     }
 
     @Override
